@@ -21,7 +21,6 @@ func NewAccount(owner string) *Account {
 
 // Deposit x amount on your account
 func (a *Account) Deposit(amount int) {
-	fmt.Println("Gonna deposit", amount, "hahaha")
 	a.blance += amount
 }
 
@@ -36,4 +35,18 @@ func (a *Account) Withdraw(amount int) error {
 	}
 	a.blance -= amount
 	return nil
+}
+
+// ChangeOwner of the account
+func (a *Account) ChangeOwner(newOwner string) {
+	a.owner = newOwner
+}
+
+// Owner of the account
+func (a Account) Owner() string {
+	return a.owner
+}
+
+func (a Account) String() string {
+	return fmt.Sprint(a.Owner(), "'s account.\nHas: ", a.Blance())
 }
