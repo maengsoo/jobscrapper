@@ -9,17 +9,21 @@ import (
 func main() {
 	dictionary := mydict.Dictionary{}
 	baseWord := "hello"
+
 	dictionary.Add(baseWord, "First")
+
 	err := dictionary.Update(baseWord, "Second")
 	if err != nil {
 		fmt.Println(err)
 	}
-	word, _ := dictionary.Search(baseWord)
-	fmt.Println(word)
-	err2 := dictionary.Delete(word)
+
+	err2 := dictionary.Delete(baseWord)
 	if err2 != nil {
 		fmt.Println(err2)
 	}
+
+	_, err3 := dictionary.Search(baseWord)
+	fmt.Println(err3)
 
 	// word := "hello"
 	// definition := "Greeting"
