@@ -9,6 +9,15 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+type extractedJob struct {
+	id       string
+	title    string
+	name     string
+	location string
+	salary   string
+	summary  string
+}
+
 var baseURL string = "https://kr.indeed.com/jobs?q=java&limit=50"
 
 func main() {
@@ -17,14 +26,40 @@ func main() {
 	for i := 0; i < totalPages; i++ {
 		getPage(i)
 	}
-
 }
 
 func getPage(page int) {
 	pageURL := baseURL + "&start=" + strconv.Itoa(page*50)
 	fmt.Println("Requesting", pageURL)
+	res, err := http.Get(pageURL)
+	checkErr(err)
+	checkCode(res)
+
+	defer res.Body.Close()
+
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	checkErr(err)
+
+	searchCards := doc.Find(".tapItem")
+
+	// html class, id 에서 정보가져오기
+	searchCards.Each(func(i int, card *goquery.Selection) {
+		id, _ := card.Attr("data-jk")
+		title := card.Find(".jobTitle>span").Text()
+		name := card.Find(".companyName").Text()
+		location := card.Find(".company_location .companyLocation").Text()
+
+		fmt.Println(id, title, name, location)
+
+	})
 }
 
+func cleanString(str string) string {
+
+	return ""
+}
+
+// 페이징 수 가져오기
 func getPages() int {
 	pages := 0
 
