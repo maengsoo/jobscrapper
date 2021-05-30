@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -45,18 +46,17 @@ func getPage(page int) {
 	// html class, id 에서 정보가져오기
 	searchCards.Each(func(i int, card *goquery.Selection) {
 		id, _ := card.Attr("data-jk")
-		title := card.Find(".jobTitle>span").Text()
-		name := card.Find(".companyName").Text()
+		title := cleanString(card.Find(".jobTitle>span").Text())
+		name := cleanString(card.Find(".companyName").Text())
 		location := card.Find(".company_location .companyLocation").Text()
 
 		fmt.Println(id, title, name, location)
-
 	})
 }
 
+// 가져온 id, title, name, location 의 공백을 없애고(TrimSpace), 배열을 만들고(Fields), 배열을 스페이스를 기준으로 한줄에 string(Join)으로 만듬
 func cleanString(str string) string {
-
-	return ""
+	return strings.Join(strings.Fields(strings.TrimSpace(str)), " ")
 }
 
 // 페이징 수 가져오기
