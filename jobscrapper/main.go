@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -22,24 +24,46 @@ type extractedJob struct {
 var baseURL string = "https://kr.indeed.com/jobs?q=java&limit=50"
 
 func main() {
-	var jobs []extractedJob
+	var jobs []extractedJob // 빈 배열 선언
 	totalPages := getPages()
 
 	for i := 0; i < totalPages; i++ {
-		extractedJobs := getPage(i)
-		jobs = append(jobs, extractedJobs...)
+		extractedJobs := getPage(i)           // 일자리 정보를 가져와
+		jobs = append(jobs, extractedJobs...) // 배열에 저장
 	}
-	fmt.Println(jobs)
+
+	writeJobs(jobs)
+	fmt.Println("Done, extracted", len(jobs))
 }
 
-// 한페이지 배열을 나열하는 메소드
+func writeJobs(jobs []extractedJob) {
+	file, err := os.Create("jobs.csv")
+	checkErr(err)
+
+	w := csv.NewWriter(file)
+	defer w.Flush()
+
+	headers := []string{"ID", "Title", "name", "Location", "Salary", "Summary"}
+
+	wErr := w.Write(headers)
+	checkErr(wErr)
+
+	for _, job := range jobs {
+		jobSlice := []string{"https://kr.indeed.com/viewjob?jk=" + job.id, job.title, job.name, job.location, job.salary, job.summary}
+		jwErr := w.Write(jobSlice)
+		checkErr(jwErr)
+	}
+
+}
+
+// 각 페이지의 있는 일자리를 반환
 func getPage(page int) []extractedJob {
 	var jobs []extractedJob
-	pageURL := baseURL + "&start=" + strconv.Itoa(page*50)
+	pageURL := baseURL + "&start=" + strconv.Itoa(page*50) // 필요한 주소
 	fmt.Println("Requesting:", pageURL)
-	res, err := http.Get(pageURL)
-	checkErr(err)
-	checkCode(res)
+	res, err := http.Get(pageURL) // 정보를 요청
+	checkErr(err)                 // 에러 체크
+	checkCode(res)                // status code 체크
 
 	defer res.Body.Close()
 
@@ -59,7 +83,8 @@ func getPage(page int) []extractedJob {
 
 // id, title, name, location 정보 가져오기
 func extractJob(card *goquery.Selection) extractedJob {
-	id, _ := card.Attr("data-jk")
+
+	id, _ := card.Attr("data-jk") // 직업카드 id
 	title := cleanString(card.Find(".jobTitle>span").Text())
 	name := cleanString(card.Find(".companyName").Text())
 	location := card.Find(".company_location .companyLocation").Text()
@@ -80,7 +105,7 @@ func cleanString(str string) string {
 	return strings.Join(strings.Fields(strings.TrimSpace(str)), " ")
 }
 
-// 페이징 수 가져오기
+// 웹페이지의 총 페이지수 가져오기
 func getPages() int {
 	pages := 0
 
@@ -109,7 +134,13 @@ func checkErr(err error) {
 
 // Check url statuscode
 func checkCode(res *http.Response) {
-	if res.StatusCode != 200 {
+	if res.StatusCode != 200 { // 200이면 정상
 		log.Fatalln("Request failed with status:", res.StatusCode)
+		// - Status code 자릿수 -
+		// 100 : 조건부 응답
+		// 200 : 성공
+		// 300 : 리다이렉션 완료(추가 동작 취해야함)
+		// 400 : 상태 오류
+		// 500 : 서버 오류
 	}
 }
