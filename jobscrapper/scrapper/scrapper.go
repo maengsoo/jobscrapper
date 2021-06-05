@@ -72,12 +72,17 @@ func getPage(page int, url string, mainC chan<- []extractedJob) {
 
 // id, title, name, location 정보 가져오기
 func extractJob(card *goquery.Selection, c chan<- extractedJob) {
+	const classJobID = ".data-jk"
+	const classTitle = ".title>a"
+	const classLocation = ".sjcl"
+	const classSalary = ".salaryText"
+	const classSummary = ".summary"
 
-	id, _ := card.Attr("data-jk") // 직업카드 id
-	title := CleanString(card.Find(".title>a").Text())
-	location := CleanString(card.Find(".sjcl").Text())
-	salary := CleanString(card.Find(".salaryText").Text())
-	summary := CleanString(card.Find(".summary").Text())
+	id, _ := card.Attr(classJobID) // 직업카드 id
+	title := CleanString(card.Find(classTitle).Text())
+	location := CleanString(card.Find(classLocation).Text())
+	salary := CleanString(card.Find(classSalary).Text())
+	summary := CleanString(card.Find(classSummary).Text())
 
 	c <- extractedJob{
 		id:       id,
